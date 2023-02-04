@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Read News Articles</title>
+</head>
+<body>
+	<ul id="results">
+	{% for key, value in results_dict.items() %}
+		<li><a href="/read_news/{{value.news_id}}">{{ value.news_title }}</a></li>
+	{% endfor %}
+	</ul>
+	{%if(from_result==0)%}
+		<input type="hidden">
+
+	{%else%}
+		<form action="/read" method="POST">
+			<input type="hidden" name="prev_page" placeholder="" value="{{from_result}}">
+			<button type="submit" name="submit" value="Previous Page">Previous Page</button>
+			<!-- <input type="submit" name="submit" value="Previous Page"> -->
+		</form>
+	{%endif%}
+	{%if(total_search_results==0 or len_results_dict<10)%}
+		{%if(total_search_results==0)%}
+			<h2>No Results Found</h2>
+		{%endif%}
+	{%else%}
+		<br>
+		<form action="/read" method="POST">
+			<input type="hidden" name="next_page" placeholder="" value={{from_result}}>
+			<button type="submit" name="submit" value="Next Page">Next Page</button>
+		</form>
+	{%endif%}
+
+	<a href="/">Back</a>
+</body>
+</html>
