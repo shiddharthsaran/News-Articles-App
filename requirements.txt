@@ -1,0 +1,17 @@
+brotlipy @ file:///home/conda/feedstock_root/build_artifacts/brotlipy_1666764686339/work
+certifi==2022.12.7
+cffi @ file:///home/conda/feedstock_root/build_artifacts/cffi_1671179355965/work
+click==8.1.3
+cryptography @ file:///home/conda/feedstock_root/build_artifacts/cryptography-split_1672672380814/work
+elastic-transport @ file:///home/conda/feedstock_root/build_artifacts/elastic-transport_1661458726921/work
+elasticsearch @ file:///home/conda/feedstock_root/build_artifacts/elasticsearch_1674876023223/work
+Flask==2.2.2
+idna @ file:///home/conda/feedstock_root/build_artifacts/idna_1663625384323/work
+itsdangerous==2.1.2
+Jinja2==3.1.2
+MarkupSafe==2.1.2
+pycparser @ file:///home/conda/feedstock_root/build_artifacts/pycparser_1636257122734/work
+pyOpenSSL @ file:///home/conda/feedstock_root/build_artifacts/pyopenssl_1672659226110/work
+PySocks @ file:///home/conda/feedstock_root/build_artifacts/pysocks_1661604839144/work
+urllib3 @ file:///home/conda/feedstock_root/build_artifacts/urllib3_1673452138552/work
+Werkzeug==2.2.2
