@@ -24,7 +24,7 @@
 
 		  function getAutoComplete() {
 				  const query = $('.search-box').val();
-				  fetch(`http://localhost:5000/auto_suggs?q=${encodeURIComponent(query.trim())}`)
+				  fetch(`/auto_suggs?q=${encodeURIComponent(query.trim())}`)
 					.then((resp) => resp.json())
 					.then((data) => {
 							$('.suggs_results').empty();
