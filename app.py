@@ -4,14 +4,16 @@ from datetime import datetime
 import json
 from elasticsearch import helpers, Elasticsearch
 app = Flask(__name__)
-# es_connection="http://localhost:9200"
+es_connection="http://localhost:9200"
 es_news_index_name="all_news_index"
-# es=Elasticsearch([es_connection])
+es=Elasticsearch([es_connection])
 
-es = Elasticsearch(
-		cloud_id="f7098e2538d04cf3a82420cb52ed7132:dXMtY2VudHJhbDEuZ2NwLmNsb3VkLmVzLmlvOjQ0MyQ1OGE1NTIzODJlMzU0MzNhYWFkYzQxYzI3Y2Q2MDY0OSQ1ZjFlZTEwZmQzMGU0NGYwOGYxMjYzMmNjMmFjMGU4ZQ==",
-		basic_auth=("elastic","ZYMAXeNWkqZDkVb9YB2jSQrM"),
-	)
+# es = Elasticsearch(
+# 		cloud_id="f7098e2538d04cf3a82420cb52ed7132:dXMtY2VudHJhbDEuZ2NwLmNsb3VkLmVzLmlvOjQ0MyQ1OGE1NTIzODJlMzU0MzNhYWFkYzQxYzI3Y2Q2MDY0OSQ1ZjFlZTEwZmQzMGU0NGYwOGYxMjYzMmNjMmFjMGU4ZQ==",
+# 		http_auth=("elastic","ZYMAXeNWkqZDkVb9YB2jSQrM"),
+# 		scheme="https",
+#     	port=443
+# 	)
 def get_es_read_results(from_result,result_size=10):
 	
 	es_read_query={
@@ -36,16 +38,10 @@ def get_es_read_results(from_result,result_size=10):
 
 	return total_read_results,results_dict
 
-def get_es_search_results(search_keyword,from_result,result_size=10):
+def get_es_search_results(search_keyword,from_result,sort_by,field,result_size=10):
 
 	es_search_query={
-					   "sort":[
-						  {
-							 "_score":{
-								"order":"desc"
-							 }
-						  }
-					   ],
+					   
 					   "query":{
 						  "bool":{
 							 "must":[
@@ -56,8 +52,7 @@ def get_es_search_results(search_keyword,from_result,result_size=10):
 											"multi_match":{
 											   "query":search_keyword,
 											   "fields":[
-												  "news_title",
-												  "news_author"
+												  field
 											   ],
 											   "operator":"and",
 											   "fuzziness":"auto"
@@ -72,8 +67,35 @@ def get_es_search_results(search_keyword,from_result,result_size=10):
 					   "from":from_result,
 					   "size":result_size
 					}
-	
+
+	if(sort_by=="relevance"):
+		es_search_query["sort"]=[
+								  {
+									 "_score":{
+										"order":"desc"
+									 }
+								  }
+							   ]
+	elif(sort_by=="datetime_desc"):
+		es_search_query["sort"]=[
+								  {
+									 "news_pub_date":{
+										"order":"desc"
+									 }
+								  }
+							   ]
+	elif(sort_by=="datetime_asc"):
+		es_search_query["sort"]=[
+								  {
+									 "news_pub_date":{
+										"order":"asc"
+									 }
+								  }
+							   ]
+	print("es_search_query:",es_search_query)
 	es_search_query_response= es.search(index=es_news_index_name, body=es_search_query)
+	print("\n")
+	print("es_search_query_response:",es_search_query_response)
 	es_search_took_time=es_search_query_response["took"]
 	es_search_results=es_search_query_response["hits"]["hits"]
 	total_search_results=es_search_query_response["hits"]["total"]["value"]
@@ -86,7 +108,7 @@ def get_es_search_results(search_keyword,from_result,result_size=10):
 
 	return total_search_results,es_search_took_time,results_dict
 
-def get_es_adv_search_results(search_keyword,tags,from_pub_date,to_pub_date,from_result,result_size=10):
+def get_es_adv_search_results(search_keyword,tags,from_pub_date,to_pub_date,from_result,sort_by,field,result_size=10):
 	tags_should_list=list()
 
 	for tag in tags:
@@ -101,13 +123,7 @@ def get_es_adv_search_results(search_keyword,tags,from_pub_date,to_pub_date,from
 		tags_should_list.append(temp_dict)
 
 	es_adv_search_query={
-					   "sort":[
-						  {
-							 "_score":{
-								"order":"desc"
-							 }
-						  }
-					   ],
+					   
 					   "query":{
 						  "bool":{
 							 "must":[
@@ -118,8 +134,7 @@ def get_es_adv_search_results(search_keyword,tags,from_pub_date,to_pub_date,from
 											"multi_match":{
 											   "query":search_keyword,
 											   "fields":[
-												  "news_title",
-												  "news_author"
+												  field
 											   ],
 											   "operator":"and",
 											   "fuzziness":"auto"
@@ -147,7 +162,30 @@ def get_es_adv_search_results(search_keyword,tags,from_pub_date,to_pub_date,from
 					   "from":from_result,
 					   "size":result_size
 					}
-	
+	if(sort_by=="relevance"):
+		es_adv_search_query["sort"]=[
+								  {
+									 "_score":{
+										"order":"desc"
+									 }
+								  }
+							   ]
+	elif(sort_by=="datetime_desc"):
+		es_adv_search_query["sort"]=[
+								  {
+									 "news_pub_date":{
+										"order":"desc"
+									 }
+								  }
+							   ]
+	elif(sort_by=="datetime_asc"):
+		es_adv_search_query["sort"]=[
+								  {
+									 "news_pub_date":{
+										"order":"asc"
+									 }
+								  }
+							   ]
 	es_adv_search_query_response= es.search(index=es_news_index_name, body=es_adv_search_query)
 	es_adv_search_took_time=es_adv_search_query_response["took"]
 	es_adv_search_results=es_adv_search_query_response["hits"]["hits"]
@@ -168,7 +206,16 @@ def adv_search():
 		return render_template("adv_search.html")
 	elif(request.method=="POST"):
 		# print(request.form)
+		from_title_result=0
+		from_author_result=0
+		closest_match_change=0
+		closest_match=""
 		search_keyword=request.form['search_keyword']
+		if("closest_match" in request.form):
+			if(len(request.form["closest_match"].lower().strip())>0 and request.form["closest_match"].lower().strip()!=search_keyword):
+				closest_match_change=1
+				closest_match=request.form["closest_match"]
+				search_keyword=request.form["closest_match"]
 		tags=[tag.strip() for tag in request.form['tags'].split(",")]
 		from_pub_date=request.form["from_pub_date"]
 		to_pub_date=request.form["to_pub_date"]
@@ -177,65 +224,158 @@ def adv_search():
 		# print("from_pub_date:",from_pub_date)
 		# print("to_pub_date:",to_pub_date)
 
-		from_result=0
 		# print("request.form:",request.form)
-		if("next_page" in request.form):
-			from_result=int(request.form["next_page"])+10
-		elif("prev_page" in request.form):
-			from_result=int(request.form["prev_page"])-10
-		total_search_results,es_search_took_time,results_dict=get_es_adv_search_results(search_keyword,tags,from_pub_date,to_pub_date,from_result)
+		if("next_page_title" in request.form):
+			from_title_result=int(request.form["next_page_title"])+10
+		elif("prev_page_title" in request.form):
+			from_title_result=int(request.form["prev_page_title"])-10
+
+		if("next_page_author" in request.form):
+			from_author_result=int(request.form["next_page_author"])+10
+		elif("prev_page_author" in request.form):
+			from_author_result=int(request.form["prev_page_author"])-10
+		sort_by="relevance"
+		if("sort_by" in request.form):
+			sort_by=request.form["sort_by"]
+
+		title_total_search_results,es_title_search_took_time,title_results_dict=get_es_adv_search_results(search_keyword,tags,from_pub_date,to_pub_date,from_title_result,sort_by,"news_title.trigram")
+		author_total_search_results,es_author_search_took_time,author_results_dict=get_es_adv_search_results(search_keyword,tags,from_pub_date,to_pub_date,from_author_result,sort_by,"news_author.trigram")
+		# total_search_results,es_search_took_time,results_dict=get_es_adv_search_results(search_keyword,tags,from_pub_date,to_pub_date,from_result,sort_by)
 
 		# print("results_dict:",results_dict)
 
-		return render_template("adv_search_results.html",to_pub_date=to_pub_date,from_pub_date=from_pub_date,tags=",".join(tags),len_results_dict=len(results_dict),search_keyword=search_keyword,total_search_results=total_search_results,es_search_took_time=es_search_took_time,results_dict=results_dict,from_result=from_result)
-
+		return render_template("adv_search_results.html",closest_match_change=closest_match_change,closest_match=closest_match,user_search=request.form["search_keyword"],sort_by=sort_by,to_pub_date=to_pub_date,from_pub_date=from_pub_date,tags=",".join(tags),search_keyword=search_keyword,
+			len_author_results_dict=len(author_results_dict),author_total_search_results=author_total_search_results,es_author_search_took_time=es_author_search_took_time,author_results_dict=author_results_dict,from_author_result=from_author_result,
+			len_title_results_dict=len(title_results_dict),title_total_search_results=title_total_search_results,es_title_search_took_time=es_title_search_took_time,title_results_dict=title_results_dict,from_title_result=from_title_result)
 
 @app.route("/auto_suggs")
 def auto_suggs():
-	search_keyword = request.args["q"].lower()
+	search_keyword = request.args["q"].lower().strip()
 	# tokens = query.split(" ")
 
 	# print("query:",query)
 	# print("tokens:",tokens)
 
 	es_auto_suggs_query={
-					   "sort":[
-						  {
-							 "_score":{
-								"order":"desc"
-							 }
-						  }
-					   ],
-					   "query":{
-						  "bool":{
-							 "must":[
-								{
-								   "bool":{
-									  "should":[
-										 {
-											"multi_match":{
-											   "query":search_keyword,
-											   "fields":[
-												  "news_title",
-												  "news_author"
-											   ],
-											   "operator":"and",
-											   "fuzziness":"auto"
-											}
-										 }
-									  ]
-								   }
-								}
-							 ]
-						  }
-					   },
-					   "from":0,
-					   "size":5
-					}
+	  "suggest": {
+		"news_title_phrase_suggester": {
+		  "text": search_keyword,
+		  "phrase":{
+			"field":"news_title.trigram",
+			"highlight":{
+			  "pre_tag":"<em>",
+			  "post_tag":"</em>"
+			},
+			"confidence":0,
+			"max_errors":3
+		  }
+		},
+		"news_author_phrase_suggester": {
+		  "text": search_keyword,
+		  "phrase":{
+			"field":"news_author.trigram",
+			"highlight":{
+			  "pre_tag":"<em>",
+			  "post_tag":"</em>"
+			},
+			"confidence":0,
+			"max_errors":3
+		  }
+		}
+	  }
+	}
 	resp = es.search(index=es_news_index_name, body=es_auto_suggs_query)
 	# print("resp:",resp)
-	return [result['_source']['news_title'] for result in resp['hits']['hits']]
+	all_suggestions=list()
+	news_title_suggestions=list()
+	news_author_suggestions=list()
+
+	for suggestion_list in resp["suggest"]["news_title_phrase_suggester"]:
+		for options in suggestion_list["options"]:
+			news_title_suggestions.append(options["text"]+"_"+str(eval(str(options["score"]))))
+
+	# print("news_title_suggestions:",news_title_suggestions)
+
+	for suggestion_list in resp["suggest"]["news_author_phrase_suggester"]:
+		for options in suggestion_list["options"]:
+			news_author_suggestions.append(options["text"]+"_"+str(eval(str(options["score"]))))
+
+	# print("news_author_suggestions:",news_author_suggestions)
+	# print("scores:",scores)
+	# scores=sorted(scores)
+	# print("scores:",scores)
+	# scores.reverse()
+	# print("scores:",scores)
+	temp=news_author_suggestions+news_title_suggestions
+	# print("temp:",temp)
+	temp = sorted(temp, key=lambda k: float(k.split("_")[-1]),reverse=True)
+	# temp.reverse()
+
+	# print("temp:",temp)
+
+	temp=[x.split("_")[0] for x in temp]
+	for x in temp:
+		if(x in all_suggestions):
+			continue
+		else:
+			all_suggestions.append(x)
+	# [all_suggestions.append(x)  if x not in all_suggestions]
+
+	# print("all_suggestions:",all_suggestions)
+
+
+	return all_suggestions
+	# print("resp:",resp)
+	# return [result['_source']['news_title'] for result in resp['hits']['hits']]
 	# total_search_results,es_search_took_time,results_dict=get_es_search_results(search_keyword,from_result)
+
+# @app.route("/auto_suggs")
+# def auto_suggs():
+# 	search_keyword = request.args["q"].lower()
+# 	# tokens = query.split(" ")
+
+# 	# print("query:",query)
+# 	# print("tokens:",tokens)
+
+# 	es_auto_suggs_query={
+# 					   "sort":[
+# 						  {
+# 							 "_score":{
+# 								"order":"desc"
+# 							 }
+# 						  }
+# 					   ],
+# 					   "query":{
+# 						  "bool":{
+# 							 "must":[
+# 								{
+# 								   "bool":{
+# 									  "should":[
+# 										 {
+# 											"multi_match":{
+# 											   "query":search_keyword,
+# 											   "fields":[
+# 												  "news_title.trigram",
+# 												  "news_author.trigram"
+# 											   ],
+# 											   "operator":"and",
+# 											   "fuzziness":"auto"
+# 											}
+# 										 }
+# 									  ]
+# 								   }
+# 								}
+# 							 ]
+# 						  }
+# 					   },
+# 					   "from":0,
+# 					   "size":5
+# 					}
+# 	resp = es.search(index=es_news_index_name, body=es_auto_suggs_query)
+# 	return [result['_source']['news_title'] for result in resp['hits']['hits']]
+# 	# total_search_results,es_search_took_time,results_dict=get_es_search_results(search_keyword,from_result)
+
+
 
 @app.route("/tags_auto_suggs")
 def tags_auto_suggs():
@@ -289,17 +429,39 @@ def search_news():
 	if(request.method=="GET"):
 		return render_template("search.html")
 	elif(request.method=="POST"):
-		search_keyword=request.form['search']
+		search_keyword=request.form['search'].lower().strip()
 		# print("search_keyword:",search_keyword)
-		from_result=0
+		from_title_result=0
+		from_author_result=0
+		closest_match_change=0
+		closest_match=""
+		
 		# print("request.form:",request.form)
-		if("next_page" in request.form):
-			from_result=int(request.form["next_page"])+10
-		elif("prev_page" in request.form):
-			from_result=int(request.form["prev_page"])-10
-		total_search_results,es_search_took_time,results_dict=get_es_search_results(search_keyword,from_result)
+		if("closest_match" in request.form):
+			if(len(request.form["closest_match"].lower().strip())>0 and request.form["closest_match"].lower().strip()!=search_keyword):
+				closest_match_change=1
+				closest_match=request.form["closest_match"]
+				search_keyword=request.form["closest_match"]
+		if("next_page_title" in request.form):
+			from_title_result=int(request.form["next_page_title"])+10
+		elif("prev_page_title" in request.form):
+			from_title_result=int(request.form["prev_page_title"])-10
+
+		if("next_page_author" in request.form):
+			from_author_result=int(request.form["next_page_author"])+10
+		elif("prev_page_author" in request.form):
+			from_author_result=int(request.form["prev_page_author"])-10
+		sort_by="relevance"
+		if("sort_by" in request.form):
+			sort_by=request.form["sort_by"]
+		title_total_search_results,es_title_search_took_time,title_results_dict=get_es_search_results(search_keyword,from_title_result,sort_by,"news_title.trigram")
+		author_total_search_results,es_author_search_took_time,author_results_dict=get_es_search_results(search_keyword,from_author_result,sort_by,"news_author.trigram")
 		# print("results_dict:",results_dict)
-		return render_template("search_results.html",len_results_dict=len(results_dict),search_keyword=search_keyword,total_search_results=total_search_results,es_search_took_time=es_search_took_time,results_dict=results_dict,from_result=from_result)
+		# print("title_results_dict:",title_results_dict)
+		# print("author_results_dict:",author_results_dict)
+		return render_template("search_results.html",closest_match_change=closest_match_change,closest_match=closest_match,user_search=request.form["search"],sort_by=sort_by,
+			len_author_results_dict=len(author_results_dict),author_total_search_results=author_total_search_results,es_author_search_took_time=es_author_search_took_time,author_results_dict=author_results_dict,from_author_result=from_author_result,
+			len_title_results_dict=len(title_results_dict),title_total_search_results=title_total_search_results,es_title_search_took_time=es_title_search_took_time,title_results_dict=title_results_dict,from_title_result=from_title_result)
 
 
 		
