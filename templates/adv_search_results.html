@@ -11,7 +11,7 @@
 	<form action="/adv_search" method="POST">
 
 		<label for="search_keyword">Search Keyword:</label>
-		<input type="text"  name="search_keyword" class="search-box" value="{{search_keyword}}" required><br>
+		<input type="text"  name="search_keyword" class="search-box" value="{{user_search}}" required><br>
 		<ul class="keyword_suggs_results"></ul>
 		<script>
 		  $(document).ready(function() {
@@ -45,44 +45,139 @@
 
 		
 	</form>
+	{%if(closest_match_change==1)%}
+		<h4>Showing Results for {{closest_match}}</h4>
+		<form id="s_form" action="/adv_search" method="POST">
+			<input type="hidden" name="search_keyword" placeholder="" value="{{user_search}}">
+			<input type="hidden" name="closest_match" value="">	
+			<input type="hidden"  name="tags" value="{{tags}}">
+			<input type="hidden" name="from_pub_date"  value="{{from_pub_date}}" >
+			<input type="hidden" name="to_pub_date"  value="{{to_pub_date}}">
+			<input type="hidden" name="sort_by" value="{{sort_by}}">
+			<h4>Search instead for </h4><a href="#" onclick="myFunction()">{{user_search}}</a>
+			<!-- <button type="submit" class="btn btn-secondary center-block" name="submit" value="Submit">Submit</button> -->
+		</form>
+		<script type="text/javascript">
+			function myFunction() {
+				document.getElementById("s_form").submit();
+			}
+		</script>
+	{%endif%}
 	<br>
-	<h3 id="total_search_results_time">About {{total_search_results}} results({{es_search_took_time}} milliseconds)</h3>
+	
+	<form action="/adv_search" method="POST">
+		<input type="hidden" name="search_keyword" placeholder="" value="{{user_search}}">
+		<input type="hidden"  name="tags" value="{{tags}}">
+		<input type="hidden" name="from_pub_date"  value="{{from_pub_date}}" >
+		<input type="hidden" name="to_pub_date"  value="{{to_pub_date}}">
+		<input type="hidden" name="closest_match" value="{{closest_match}}">
+		<label>Sort By:</label><br>
+		{%if(sort_by=="relevance")%}
+			<input type="radio" name="sort_by" id="relevance" value="relevance" checked>
+		{%else%}
+			<input type="radio" name="sort_by" id="relevance" value="relevance">
+		{%endif%}
+		<label for="relevance">Relevance</label><br>
+		
+		{%if(sort_by=="datetime_desc")%}
+			<input type="radio" name="sort_by" id="datetime_desc" value="datetime_desc" checked>
+		{%else%}
+			<input type="radio" name="sort_by" id="datetime_desc" value="datetime_desc">
+		{%endif%}
+		<label for="datetime_desc">Latest</label><br>
+		
+		{%if(sort_by=="datetime_asc")%}
+			<input type="radio" name="sort_by" id="datetime_asc" value="datetime_asc" checked>
+		{%else%}
+			<input type="radio" name="sort_by" id="datetime_asc" value="datetime_asc">
+		{%endif%}
+		<label for="datetime_asc">Oldest</label><br>
+		<button type="submit" class="btn btn-secondary center-block" name="submit" value="Submit">Submit</button>
+	</form>
+	<h3 id="es_title_search_took_time">About {{title_total_search_results}} results({{es_title_search_took_time}} milliseconds) for Title Column</h3>
 	<ul id="results">
-	{% for key, value in results_dict.items() %}
+	{% for key, value in title_results_dict.items() %}
 		<li><a href="/read_news/{{value.news_id}}">{{ value.news_title }}</a></li>
 	{% endfor %}
 	</ul>
-	{%if(from_result==0)%}
+	{%if(from_title_result==0)%}
 		<input type="hidden">
 
 	{%else%}
 		<form action="/adv_search" method="POST">
-			<input type="hidden" name="search_keyword" placeholder="" value="{{search_keyword}}">
+			<input type="hidden" name="search_keyword" placeholder="" value="{{user_search}}">
 			<input type="hidden"  name="tags" value="{{tags}}">
 			<input type="hidden" name="from_pub_date"  value="{{from_pub_date}}" >
 			<input type="hidden" name="to_pub_date"  value="{{to_pub_date}}">
-			<input type="hidden" name="prev_page" value="{{from_result}}">
+			<input type="hidden" name="prev_page_author" value="{{from_title_result}}">
+			<input type="hidden" name="sort_by" value="{{sort_by}}">
+			<input type="hidden" name="closest_match" value="{{closest_match}}">
 			<button type="submit" class="btn btn-secondary center-block" name="submit" value="Previous Page">Previous Page</button>
 			<!-- <input type="submit" name="submit" value="Previous Page"> -->
 		</form>
 	{%endif%}
-	{%if(total_search_results==0 or len_results_dict<10)%}
-		{%if(total_search_results==0)%}
+	{%if(title_total_search_results==0 or len_title_results_dict<10 or title_total_search_results==10)%}
+		{%if(title_total_search_results==0)%}
 			<h2>No Results Found</h2>
 		{%endif%}
 	{%else%}
 		<br>
 		<form action="/adv_search" method="POST">
-			<input type="hidden" name="search_keyword" placeholder="" value="{{search_keyword}}">
+			<input type="hidden" name="search_keyword" placeholder="" value="{{user_search}}">
 			<input type="hidden"  name="tags" value="{{tags}}">
 			<input type="hidden" name="from_pub_date"  value="{{from_pub_date}}" >
 			<input type="hidden" name="to_pub_date"  value="{{to_pub_date}}">
-			<input type="hidden" name="prev_page" value="{{from_result}}">
-			<input type="hidden" name="next_page" placeholder="" value={{from_result}}>
+			<input type="hidden" name="prev_page_author" value="{{from_title_result}}">
+			<input type="hidden" name="next_page_author" placeholder="" value={{from_title_result}}>
+			<input type="hidden" name="sort_by" value="{{sort_by}}">
+			<input type="hidden" name="closest_match" value="{{closest_match}}">
 			<button type="submit" class="btn btn-dark center-block" name="submit" value="Next Page">Next Page</button>
 			<!-- <input type="submit" name="submit" value="Next Page"> -->
 		</form>
 	{%endif%}
 
+
+
+	<h3 id="es_author_search_took_time">About {{author_total_search_results}} results({{es_author_search_took_time}} milliseconds) for Author Column</h3>
+	<ul id="results">
+	{% for key, value in author_results_dict.items() %}
+		<li><a href="/read_news/{{value.news_id}}">{{ value.news_title }}</a></li>
+	{% endfor %}
+	</ul>
+	{%if(from_author_result==0)%}
+		<input type="hidden">
+
+	{%else%}
+		<form action="/adv_search" method="POST">
+			<input type="hidden" name="search_keyword" placeholder="" value="{{user_search}}">
+			<input type="hidden"  name="tags" value="{{tags}}">
+			<input type="hidden" name="from_pub_date"  value="{{from_pub_date}}" >
+			<input type="hidden" name="to_pub_date"  value="{{to_pub_date}}">
+			<input type="hidden" name="prev_page_author" value="{{from_author_result}}">
+			<input type="hidden" name="sort_by" value="{{sort_by}}">
+			<input type="hidden" name="closest_match" value="{{closest_match}}">
+			<button type="submit" class="btn btn-secondary center-block" name="submit" value="Previous Page">Previous Page</button>
+			<!-- <input type="submit" name="submit" value="Previous Page"> -->
+		</form>
+	{%endif%}
+	{%if(author_total_search_results==0 or len_author_results_dict<10 or author_total_search_results==10)%}
+		{%if(author_total_search_results==0)%}
+			<h2>No Results Found</h2>
+		{%endif%}
+	{%else%}
+		<br>
+		<form action="/adv_search" method="POST">
+			<input type="hidden" name="search_keyword" placeholder="" value="{{user_search}}">
+			<input type="hidden"  name="tags" value="{{tags}}">
+			<input type="hidden" name="from_pub_date"  value="{{from_pub_date}}" >
+			<input type="hidden" name="to_pub_date"  value="{{to_pub_date}}">
+			<input type="hidden" name="prev_page_author" value="{{from_author_result}}">
+			<input type="hidden" name="next_page_author" placeholder="" value={{from_author_result}}>
+			<input type="hidden" name="sort_by" value="{{sort_by}}">
+			<input type="hidden" name="closest_match" value="{{closest_match}}">
+			<button type="submit" class="btn btn-dark center-block" name="submit" value="Next Page">Next Page</button>
+			<!-- <input type="submit" name="submit" value="Next Page"> -->
+		</form>
+	{%endif%}
 </body>
 </html>
