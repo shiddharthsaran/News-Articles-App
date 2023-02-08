@@ -29,6 +29,12 @@
 				  fetch(`/auto_suggs?q=${encodeURIComponent(query.trim())}`)
 					.then((resp) => resp.json())
 					.then((data) => {
+							if(data.length>0){
+								document.getElementById("closest_match").value=data[0]
+							}
+							else{
+								document.getElementById("closest_match").value=""
+							}
 							$('.keyword_suggs_results').empty();
 							for (let i = 0; i < data.length; i++) {
 									$('.keyword_suggs_results').append(`<li>${data[i]}</li>`)
@@ -36,6 +42,7 @@
 						  })
 		  }
 		</script>
+		<input type="hidden"  id="closest_match" name="closest_match">
 		<label for="tags">Tags:</label>
 		<input type="text"  name="tags" class="tags-box" placeholder="" required><br>
 		<!-- <ul class="tags_suggs_results"></ul>
@@ -52,7 +59,7 @@
 
 		  function getAutoComplete() {
 				  const query = $('.tags-box').val();
-				  fetch(`/tags_auto_suggs?q=${encodeURIComponent(query.trim())}`)
+				  fetch(`http://localhost:5000/tags_auto_suggs?q=${encodeURIComponent(query.trim())}`)
 					.then((resp) => resp.json())
 					.then((data) => {
 							$('.tags_suggs_results').empty();
