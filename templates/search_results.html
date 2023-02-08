@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js" integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+	<title>News Articles Search Results</title>
+</head>
+<body>
+	<form action="/search" method="POST">
+		<input type="text" name="search" class="search-box" placeholder="" value="{{user_search}}">
+		<ul class="suggs_results"></ul>
+		<script>
+		  $(document).ready(function() {
+			let debounce;
+			$('.search-box').on('keydown', function (e) { 
+			  clearTimeout(debounce)
+			  debounce = setTimeout(() => {
+					  getAutoComplete();  
+			  }, 300);
+			})
+		  })
+
+		  function getAutoComplete() {
+				  const query = $('.search-box').val();
+				  fetch(`/auto_suggs?q=${encodeURIComponent(query.trim())}`)
+					.then((resp) => resp.json())
+					.then((data) => {
+							if(data.length>0){
+								document.getElementById("closest_match").value=data[0]
+							}
+							else{
+								document.getElementById("closest_match").value=""
+							}
+							$('.suggs_results').empty();
+							for (let i = 0; i < data.length; i++) {
+									$('.suggs_results').append(`<li>${data[i]}</li>`)
+							}
+						  })
+		  }
+		</script>
+		<input type="hidden"  id="closest_match" name="closest_match">
+		<input type="submit" class="btn btn-primary" name="submit" value="Search">
+	</form>
+	{%if(closest_match_change==1)%}
+		<h4>Showing Results for {{closest_match}}</h4>
+		<form id="s_form" action="/search" method="POST">
+			<input type="hidden" name="search" placeholder="" value="{{user_search}}">
+			<input type="hidden" name="closest_match" value="">		
+			<input type="hidden" name="sort_by" value="{{sort_by}}">
+			<h4>Search instead for </h4><a href="#" onclick="myFunction()">{{user_search}}</a>
+			<!-- <button type="submit" class="btn btn-secondary center-block" name="submit" value="Submit">Submit</button> -->
+		</form>
+		<script type="text/javascript">
+			function myFunction() {
+				document.getElementById("s_form").submit();
+			}
+		</script>
+	{%endif%}
+	<br>
+	
+	<form action="/search" method="POST">
+		<input type="hidden" name="search" placeholder="" value="{{user_search}}">
+		<input type="hidden" name="closest_match" value="{{closest_match}}">
+		<label>Sort By:</label><br>
+		{%if(sort_by=="relevance")%}
+			<input type="radio" name="sort_by" id="relevance" value="relevance" checked>
+		{%else%}
+			<input type="radio" name="sort_by" id="relevance" value="relevance">
+		{%endif%}
+		<label for="relevance">Relevance</label><br>
+		
+		{%if(sort_by=="datetime_desc")%}
+			<input type="radio" name="sort_by" id="datetime_desc" value="datetime_desc" checked>
+		{%else%}
+			<input type="radio" name="sort_by" id="datetime_desc" value="datetime_desc">
+		{%endif%}
+		<label for="datetime_desc">Latest</label><br>
+		
+		{%if(sort_by=="datetime_asc")%}
+			<input type="radio" name="sort_by" id="datetime_asc" value="datetime_asc" checked>
+		{%else%}
+			<input type="radio" name="sort_by" id="datetime_asc" value="datetime_asc">
+		{%endif%}
+		<label for="datetime_asc">Oldest</label><br>
+		<button type="submit" class="btn btn-secondary center-block" name="submit" value="Submit">Submit</button>
+	</form>
+	<h3 id="es_title_search_took_time">About {{title_total_search_results}} results({{es_title_search_took_time}} milliseconds) for Title Column</h3>
+	<ul id="results">
+	{% for key, value in title_results_dict.items() %}
+		<li><a href="/read_news/{{value.news_id}}">{{ value.news_title }}</a></li>
+	{% endfor %}
+	</ul>
+	{%if(from_title_result==0)%}
+		<input type="hidden">
+
+	{%else%}
+		<form action="/search" method="POST">
+			<input type="hidden" name="search" placeholder="" value="{{user_search}}">
+			<input type="hidden" name="prev_page_title" placeholder="" value="{{from_title_result}}">
+			<input type="hidden" name="sort_by" value="{{sort_by}}">
+			<input type="hidden" name="closest_match" value="{{closest_match}}">
+			<button type="submit" class="btn btn-secondary center-block" name="submit" value="Previous Page">Previous Page</button>
+			<!-- <input type="submit" name="submit" value="Previous Page"> -->
+		</form>
+	{%endif%}
+	{%if(title_total_search_results==0 or len_title_results_dict<10 or title_total_search_results==10)%}
+		{%if(title_total_search_results==0)%}
+			<h2>No Results Found</h2>
+		{%endif%}
+	{%else%}
+		<br>
+		<form action="/search" method="POST">
+			<input type="hidden" name="search" placeholder="" value="{{user_search}}">
+			<input type="hidden" name="next_page_title" placeholder="" value={{from_title_result}}>
+			<input type="hidden" name="sort_by" value="{{sort_by}}">
+			<input type="hidden" name="closest_match" value="{{closest_match}}">
+			<button type="submit" class="btn btn-dark center-block" name="submit" value="Next Page">Next Page</button>
+			<!-- <input type="submit" name="submit" value="Next Page"> -->
+		</form>
+	{%endif%}
+
+	<h3 id="es_author_search_took_time">About {{author_total_search_results}} results({{es_author_search_took_time}} milliseconds) for Author Column</h3>
+	<ul id="results">
+	{% for key, value in author_results_dict.items() %}
+		<li><a href="/read_news/{{value.news_id}}">{{ value.news_title }}</a></li>
+	{% endfor %}
+	</ul>
+	{%if(from_author_result==0)%}
+		<input type="hidden">
+
+	{%else%}
+		<form action="/search" method="POST">
+			<input type="hidden" name="search" placeholder="" value="{{user_search}}">
+			<input type="hidden" name="prev_page_author" placeholder="" value="{{from_author_result}}">
+			<input type="hidden" name="sort_by" value="{{sort_by}}">
+			<input type="hidden" name="closest_match" value="{{closest_match}}">
+			<button type="submit" class="btn btn-secondary center-block" name="submit" value="Previous Page">Previous Page</button>
+			<!-- <input type="submit" name="submit" value="Previous Page"> -->
+		</form>
+	{%endif%}
+	{%if(author_total_search_results==0 or len_author_results_dict<10 or author_total_search_results==10)%}
+		{%if(author_total_search_results==0)%}
+			<h2>No Results Found</h2>
+		{%endif%}
+	{%else%}
+		<br>
+		<form action="/search" method="POST">
+			<input type="hidden" name="search" placeholder="" value="{{user_search}}">
+			<input type="hidden" name="next_page_author" placeholder="" value={{from_author_result}}>
+			<input type="hidden" name="sort_by" value="{{sort_by}}">
+			<input type="hidden" name="closest_match" value="{{closest_match}}">
+			<button type="submit" class="btn btn-dark center-block" name="submit" value="Next Page">Next Page</button>
+			<!-- <input type="submit" name="submit" value="Next Page"> -->
+		</form>
+	{%endif%}
+
+</body>
+</html>
