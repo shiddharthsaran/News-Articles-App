@@ -4,16 +4,16 @@ from datetime import datetime
 import json
 from elasticsearch import helpers, Elasticsearch
 app = Flask(__name__)
-es_connection="http://localhost:9200"
+# es_connection="http://localhost:9200"
 es_news_index_name="all_news_index"
-es=Elasticsearch([es_connection])
+# es=Elasticsearch([es_connection])
 
-# es = Elasticsearch(
-# 		cloud_id="f7098e2538d04cf3a82420cb52ed7132:dXMtY2VudHJhbDEuZ2NwLmNsb3VkLmVzLmlvOjQ0MyQ1OGE1NTIzODJlMzU0MzNhYWFkYzQxYzI3Y2Q2MDY0OSQ1ZjFlZTEwZmQzMGU0NGYwOGYxMjYzMmNjMmFjMGU4ZQ==",
-# 		http_auth=("elastic","ZYMAXeNWkqZDkVb9YB2jSQrM"),
-# 		scheme="https",
-#     	port=443
-# 	)
+es = Elasticsearch(
+		cloud_id="f7098e2538d04cf3a82420cb52ed7132:dXMtY2VudHJhbDEuZ2NwLmNsb3VkLmVzLmlvOjQ0MyQ1OGE1NTIzODJlMzU0MzNhYWFkYzQxYzI3Y2Q2MDY0OSQ1ZjFlZTEwZmQzMGU0NGYwOGYxMjYzMmNjMmFjMGU4ZQ==",
+		http_auth=("elastic","ZYMAXeNWkqZDkVb9YB2jSQrM"),
+		scheme="https",
+    	port=443
+	)
 def get_es_read_results(from_result,result_size=10):
 	
 	es_read_query={
