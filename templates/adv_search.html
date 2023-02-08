@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js" integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+	<title>Advanced Search</title>
+</head>
+<body>
+
+	<form action="/adv_search" method="POST" >
+		<label for="search_keyword">Search Keyword:</label>
+		<input type="text"  name="search_keyword" class="search-box"  placeholder="" required><br>
+		<ul class="keyword_suggs_results"></ul>
+		<script>
+		  $(document).ready(function() {
+			let debounce;
+			$('.search-box').on('keydown', function (e) { 
+			  clearTimeout(debounce)
+			  debounce = setTimeout(() => {
+					  getAutoComplete();  
+			  }, 300);
+			})
+		  })
+
+		  function getAutoComplete() {
+				  const query = $('.search-box').val();
+				  fetch(`/auto_suggs?q=${encodeURIComponent(query.trim())}`)
+					.then((resp) => resp.json())
+					.then((data) => {
+							if(data.length>0){
+								document.getElementById("closest_match").value=data[0]
+							}
+							else{
+								document.getElementById("closest_match").value=""
+							}
+							$('.keyword_suggs_results').empty();
+							for (let i = 0; i < data.length; i++) {
+									$('.keyword_suggs_results').append(`<li>${data[i]}</li>`)
+							}
+						  })
+		  }
+		</script>
+		<input type="hidden"  id="closest_match" name="closest_match">
+		<label for="tags">Tags:</label>
+		<input type="text"  name="tags" class="tags-box" placeholder="" required><br>
+		<!-- <ul class="tags_suggs_results"></ul>
+		<script>
+		  $(document).ready(function() {
+			let debounce;
+			$('.tags-box').on('keydown', function (e) { 
+			  clearTimeout(debounce)
+			  debounce = setTimeout(() => {
+					  getAutoComplete();  
+			  }, 300);
+			})
+		  })
+
+		  function getAutoComplete() {
+				  const query = $('.tags-box').val();
+				  fetch(`http://localhost:5000/tags_auto_suggs?q=${encodeURIComponent(query.trim())}`)
+					.then((resp) => resp.json())
+					.then((data) => {
+							$('.tags_suggs_results').empty();
+							for (let i = 0; i < data.length; i++) {
+									$('.tags_suggs_results').append(`<li>${data[i]}</li>`)
+							}
+						  })
+		  }
+		</script> -->
+
+
+
+		<label for="date_range">Date Range:</label>
+		<input type="date" name="from_pub_date" placeholder="dd-mm-yyyy" required>
+		<input type="date" name="to_pub_date" placeholder="dd-mm-yyyy" required><br>
+		<input type="submit" class="btn btn-primary" name="submit" value="Search">
+	</form>
+
+</body>
+</html>
