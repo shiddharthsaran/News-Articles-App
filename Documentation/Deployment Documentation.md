@@ -148,7 +148,7 @@ This documentation outlines the steps to deploy a Flask server with Gunicorn and
 	```bash
 	pip install wheel
 	pip install gunicorn flask
-	pip install elasticsearch python-dotnev
+	pip install elasticsearch python-dotenv
 	```
 ## Step 4: Run the Flask Application
 
